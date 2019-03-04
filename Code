@@ -1,0 +1,56 @@
+/****************************************
+ * Include Libraries
+ ****************************************/
+#include "UbidotsESPMQTT.h"
+
+/****************************************
+ * Define Constants
+ ****************************************/
+#define TOKEN "A1E-aKwGIkhRNx9Oq5Fbv0QYXuVHeRV16s" // Your Ubidots TOKEN
+#define WIFINAME "Kedia" //Your SSID
+#define WIFIPASS "kediarahul" // Your Wifi Pass
+
+Ubidots client(TOKEN);
+
+/****************************************
+ * Auxiliar Functions
+ ****************************************/
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i=0;i<length;i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
+  if((char)payload[0]!='1')      //applying reverse logic
+    digitalWrite(D4, HIGH);
+  else 
+    digitalWrite(D4, LOW);
+}
+
+/****************************************
+ * Main Functions
+ ****************************************/
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+  pinMode(D4, OUTPUT);
+  client.setDebug(true); // Pass a true or false bool value to activate debug messages
+  client.wifiConnection(WIFINAME, WIFIPASS);
+  client.begin(callback);
+  client.ubidotsSubscribe("switch","new-variable"); //Insert the dataSource and Variable's Labels
+  }
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  if(!client.connected()){
+      client.reconnect();
+      client.ubidotsSubscribe("switch","new-variable"); //Insert the dataSource and Variable's Labels
+      }
+  client.loop();
+  
+  }
